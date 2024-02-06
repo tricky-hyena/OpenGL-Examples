@@ -83,13 +83,16 @@ bool createShaderProgram()
         "#version 330\n"
         ""
         "layout(location = 0) in vec2 a_position;"
-        "layout(location = 1) in vec3 a_color;"
+        "layout(location = 1) in float xp;"
+        "layout(location = 2) in float yp;"
         ""
-        "out vec3 v_color;"
+        "out float v_t;"
+        "out float v_p;"
         ""
         "void main()"
         "{"
-        "    v_color = a_color;"
+        "    v_t = xp;"
+        "    v_p = yp;"
         "    gl_Position = vec4(a_position, 0.0, 1.0);"
         "}"
         ;
@@ -97,15 +100,17 @@ bool createShaderProgram()
     const GLchar fsh[] =
         "#version 330\n"
         ""
-        "in vec3 v_color;"
+        "in float v_t;"
+        "in float v_p;"
         ""
         "layout(location = 0) out vec4 o_color;"
         ""
         "void main()"
         "{"
-        "   o_color = vec4(v_color, 1.0);"
-        "}"
-        ;
+        "float x = v_t - 0.5; float y=  v_p-0.5;"
+        "float val = sin(256*sqrt(pow(x, 2) + pow(y, 2)));"
+        "o_color = vec4(val, val,val, 1.0);"
+        "}";
 
     GLuint vertexShader, fragmentShader;
 
@@ -124,14 +129,15 @@ bool createModel()
 {
     const GLfloat vertices[] =
     {
-        -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-         0.0f,  0.5f, 1.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f, 0.0f, 0.0f,
+         0.5f, -0.5f, 1.0f, 0.0f,
+         0.5f,  0.5f, 1.0f, 1.0f,
+        -0.5f,  0.5f, 0.0f, 1.0f,
     };
 
     const GLuint indices[] =
     {
-        0, 1, 2,
+        0, 1, 2, 2, 3, 0
     };
 
     glGenVertexArrays(1, &g_model.vao);
@@ -139,17 +145,21 @@ bool createModel()
 
     glGenBuffers(1, &g_model.vbo);
     glBindBuffer(GL_ARRAY_BUFFER, g_model.vbo);
-    glBufferData(GL_ARRAY_BUFFER, 15 * sizeof(GLfloat), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 16 * sizeof(GLfloat), vertices, GL_STATIC_DRAW);
 
     glGenBuffers(1, &g_model.ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_model.ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
-    g_model.indexCount = 3;
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
+    g_model.indexCount = 6;
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (const GLvoid*)0);
+
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)(2 * sizeof(GLfloat)));
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (const GLvoid*)(2 * sizeof(GLfloat)));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (const GLvoid*)(3 * sizeof(GLfloat)));
 
     return g_model.vbo != 0 && g_model.ibo != 0 && g_model.vao != 0;
 }
